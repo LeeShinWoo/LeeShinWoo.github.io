@@ -16,10 +16,9 @@ Ex) Controller , Service 에서 수행하는 비즈니스 로직 및 Validation 
 2. 로우 데이터 게이트웨이나 테이블 데이터 게이트웨이를 적용해 데이터 원본 계층과 함계 사용하기에 적합함
 3. 트랜잭션의 경계를 설정하기가 쉽다 (?)
 
-로우 데이터 게이트웨이(Row Data Gateway)는 데이터베이스 테이블의 한 레코드를 정확하게 묘사하는 객체의 역할을 한다. 오직 관련된 하나의 행에 대해서만 작업을 수행한다.
-(https://javacan.tistory.com/entry/98)
-테이블 데이터 게이트웨이(Table Data Gateway)는 데이터베이스 테이블에 대한 게이트웨이 역할을 하는 객체로서, 하나의 테이블 데이터 게이트웨이 객체를 통해서 테이블의 모든 행을 처리하는 패턴
-(https://javacan.tistory.com/entry/97)
+로우 데이터 게이트웨이(Row Data Gateway)는 데이터베이스 테이블의 한 레코드를 정확하게 묘사하는 객체의 역할을 한다. 오직 관련된 하나의 행에 대해서만 작업을 수행한다.(https://javacan.tistory.com/entry/98)
+
+테이블 데이터 게이트웨이(Table Data Gateway)는 데이터베이스 테이블에 대한 게이트웨이 역할을 하는 객체로서, 하나의 테이블 데이터 게이트웨이 객체를 통해서 테이블의 모든 행을 처리하는 패턴(https://javacan.tistory.com/entry/97)
 
 단점
 1. 여러 트랜잭션이 비슷한 작업을 수행해야 하므로 코드가 많이 중복됨에 따라 애플리케이션이 명확한 구조가 없어짐.
@@ -41,28 +40,53 @@ Ex) Controller , Service 에서 수행하는 비즈니스 로직 및 Validation 
 테이블 모듈 : 데이터베이스 테이블이나 뷰의 모든 행에 대한 비즈니스 논리를 처리하는 단일 인스턴스 (Spring 의 DAO 를 통하여 비즈니스 논리를 처리하는 것이 테이블 모듈의 예시인것 같음)
 
 도메인 논리 예시 코드
-회원가입
-Member member = new Member();
-member.setId(id);
-member.setName(name);
-member.regist();
-회원탈퇴
-Member member = someFindMemberMethod(memberId);
-member.secede();
+
+회원가입  
+Member member = new Member();  
+member.setId(id);  
+member.setName(name);  
+member.regist();  
+
+회원탈퇴  
+Member member = someFindMemberMethod(memberId);  
+member.secede();  
 
 테이블모듈 예시코드
-회원가입
-RecordSet newData = new RecordSet();
-newData.set("id", id);
-newData.set("name", name);
-MemberTableModule tableModule = MemberTableModule.getInstance();
-tableModule.regist(newData);
-회원탈퇴
-MemberTableModule tableModule = MemberTableModule.getInstance();
-tableModule.secede(someId);
+
+회원가입  
+RecordSet newData = new RecordSet();  
+newData.set("id", id);  
+newData.set("name", name);  
+MemberTableModule tableModule = MemberTableModule.getInstance();  
+tableModule.regist(newData);  
+
+회원탈퇴  
+MemberTableModule tableModule = MemberTableModule.getInstance();  
+tableModule.secede(someId);  
 
 차이점 : 도메인 논리는 객체를 통하여 회원가입, 회원탈퇴에 대한 기능이 구현되나 테이블모듈은 싱글턴 패턴으로 구성된 MemberTableModule 을 통하여 비즈니스논리를 처리함.
 (https://javacan.tistory.com/tag/%ED%85%8C%EC%9D%B4%EB%B8%94%20%EB%AA%A8%EB%93%88)
 
 서비스계층 : 프레젠테이션 계층과 애플리케이션의 API 역할을 하는 계층
-(Spring의 dispatcherservlet 이 하는 역할과 비슷해보임)
+(Spring의 dispatcherservlet 이 하는 역할과 비슷해보임)  
+서비스 계층은 명확한 API를 제공하여 ㅡ랜잭션 제어, 보안과 같은 기능을 넣기도 좋은 위치.  
+
+service / controller 차이는 무엇인가?  
+1. Controller : 클라이언트의 요청에 해당하는 비즈니스 로직을 호출해주는 역할
+2. Service : 비즈니스 로직을 수행하는 역할  
+차이를 두어 구분하는 이유는 Service에 비즈니스 로직이 존재하므로 재사용성이 좋아짐. (Controller에 비즈로직을 구현한 경우 중복되는 로직에대한 처리가 용이하지못함.)
+
+서비스만 있으면 controller가 필요 없나?  
+사용자 요청을 받아 처리할수 있는 Controller의 역할이 필요해보임.
+
+만일 api 를 노출한다면 어디다가 노출하는가?  
+Controller 에 API를 정의하고 비즈니스로직은 Service에 정의해야함.
+
+mvc 모델에서의 컨트롤러와는 무슨 차이가 있단 말인가?  
+MVC 모델의 Controller가 구현된 것이 Spring의 Controller 라고 생각함.  
+Model : Service 와 같이 비즈니스로직을 처리함.
+View : 사용자가 보는 화면상의 출력되는 내용(HTML,javascript,Css 등)  
+Controller : 사용자의 요청을 받아 View에 반영하여 사용자에게 알려줌
+
+비즈니스 로직은 어디에 들어있으면 좋을까?  
+Controller, Service 역할에 맡게 Service에 들어있는 것이 바람직하나, 프로젝트 특성에 따라 트랜잭션스크립트처럼 절차적으로 구현되어도 무방하다고 생각함.
